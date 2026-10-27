@@ -1,14 +1,12 @@
-# scripts
+# cli-tools
 
-My scripts
+My CLI tools
 
 ## Install
 
 ```sh
-bash install.sh
+./install.sh
 ```
-
-and add `$HOME/.local/bin` to `$PATH`
 
 ## License
 
