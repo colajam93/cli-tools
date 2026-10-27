@@ -1,10 +1,32 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source $script_dir/external/libshellscript/libshellscript/libshellscript.sh
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+source "$script_dir/vendor/dotfiles-lib/dotfiles-lib.sh"
 
-local_script_dir=$HOME/.local/bin
-install -d $local_script_dir
-foreach_with_generator \
-    "safe_install %s $local_script_dir 755" \
-    "ls_absolute_path $script_dir/bin"
+quiet=false
+dry_run=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -q|--quiet) quiet=true ;;
+        --dry-run) dry_run=true ;;
+        -h|--help)
+            printf 'Usage: %s [--dry-run] [-q|--quiet]\n' "$0"
+            exit 0
+            ;;
+        *) printf 'Unknown argument: %s\n' "$1" >&2; exit 1 ;;
+    esac
+    shift
+done
+
+: "${HOME:?HOME must be set and nonempty}"
+export _dfl_quiet=$quiet
+
+dfl_link_reset
+source "$script_dir/bin/link.sh"
+
+if [[ $dry_run == true ]]; then
+    dfl_link_preview
+else
+    dfl_link_apply
+fi
