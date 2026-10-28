@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case ${1:-} in
+    -h|--help)
+        printf 'Usage: screenshot-copy\nSelect a screen region and copy it to the clipboard as PNG.\nRequires: grim, slurp, wl-copy (Wayland).\n'
+        exit 0
+        ;;
+esac
+if [[ $# -ne 0 ]]; then
+    printf 'Usage: screenshot-copy\n' >&2
+    exit 1
+fi
+
+for dependency in grim slurp wl-copy; do
+    if ! command -v "$dependency" > /dev/null 2>&1; then
+        printf 'screenshot-copy: required command not found: %s\n' "$dependency" >&2
+        exit 1
+    fi
+done
+
+# slurp exits unsuccessfully when the selection is cancelled.
+if ! geometry=$(slurp); then
+    exit 1
+fi
+[[ -n $geometry ]] || exit 1
+
+# Finish capturing before touching the clipboard.
+capture=$(mktemp "${TMPDIR:-/tmp}/screenshot-copy.XXXXXXXX.png")
+trap 'rm -f -- "$capture"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+grim -g "$geometry" "$capture"
+wl-copy --type image/png < "$capture"

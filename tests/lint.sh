@@ -13,6 +13,6 @@ docker run --rm \
     --entrypoint bash \
     "$image" -c 'shopt -s globstar nullglob
     shellcheck --shell=bash \
-        /workspace/install.sh /workspace/bin/link.sh \
+        /workspace/install.sh /workspace/bin/link.sh /workspace/bin/screenshot-copy \
         /workspace/tests/*.sh \
         /workspace/tests/cases/*.sh'
