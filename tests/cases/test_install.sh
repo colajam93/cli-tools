@@ -20,10 +20,13 @@ run_install() (
 
 assert_links() {
     local src dest
-    dest="$test_home/.local/bin/unzipj"
-    assertTrue "test -L '$dest'"
-    assertEquals "$fixture/bin/unzipj" "$(readlink -- "$dest")"
-    assertTrue "test -x '$dest'"
+    # Check installed entries without maintaining a second command list.
+    # An empty installation also fails because the unmatched glob is not a link.
+    for dest in "$test_home/.local/bin/"*; do
+        assertTrue "test -L '$dest'"
+        assertEquals "$fixture/bin/${dest##*/}" "$(readlink -- "$dest")"
+        assertTrue "test -x '$dest'"
+    done
     for src in 'aaa fixture' 'zzz fixture'; do
         dest="$test_home/.local/bin/$src"
         assertFalse "test -e '$dest' || test -L '$dest'"
@@ -47,7 +50,7 @@ test_rerun_skips_existing_links() {
     before=$(stat -c '%i:%Y:%Z' "$test_home/.local/bin/unzipj")
     run_install > "$test_dir/output" 2>&1
     assertEquals 0 "$?"
-    assertEquals 1 "$(grep -c '^skip ' "$test_dir/output")"
+    assertTrue "grep -q '^skip ' '$test_dir/output'"
     assertEquals "$before" "$(stat -c '%i:%Y:%Z' "$test_home/.local/bin/unzipj")"
     assert_links
 }
@@ -58,7 +61,7 @@ test_dry_run_leaves_home_absent_even_with_quiet() {
         run_install --dry-run "$option" > "$test_dir/output" 2>&1
         assertEquals 0 "$?"
         assertFalse "test -e '$test_home'"
-        assertEquals 1 "$(grep -c '^create ' "$test_dir/output")"
+        assertTrue "grep -q '^create ' '$test_dir/output'"
     done
 }
 
@@ -66,7 +69,7 @@ test_dry_run_reports_existing_links() {
     run_install > /dev/null 2>&1
     run_install --dry-run > "$test_dir/output" 2>&1
     assertEquals 0 "$?"
-    assertEquals 1 "$(grep -c '^skip ' "$test_dir/output")"
+    assertTrue "grep -q '^skip ' '$test_dir/output'"
     assert_links
 }
 
