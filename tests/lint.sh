@@ -14,5 +14,6 @@ docker run --rm \
     "$image" -c 'shopt -s globstar nullglob
     shellcheck --shell=bash \
         /workspace/install.sh /workspace/bin/link.sh /workspace/bin/screenshot-copy \
+        /workspace/bin/git-delete-merged-branches \
         /workspace/tests/*.sh \
         /workspace/tests/cases/*.sh'
